@@ -186,6 +186,10 @@ extension UIView {
 
     private func recursiveHideSkeleton(reloadDataAfter reload: Bool, transition: SkeletonTransitionStyle, root: UIView? = nil) {
         guard isSkeletonActive else { return }
+        
+        //added unswizzleLayoutSubviews function to address issues with loading Salesforce SDK
+        unswizzleLayoutSubviews()
+        
         if isHiddenWhenSkeletonIsActive {
             isHidden = false
         }
@@ -221,6 +225,17 @@ extension UIView {
             layer.stopAnimation()
         }
     }
+    
+    private func unswizzleLayoutSubviews() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+          DispatchQueue.once(token: "UIView.SkeletonView.unswizzle") {
+            swizzle(selector: #selector(UIView.skeletonLayoutSubviews),
+                with: #selector(UIView.layoutSubviews),
+                inClass: UIView.self,
+                usingClass: UIView.self)
+          }
+        }
+      }
     
     private func swizzleLayoutSubviews() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
